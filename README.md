@@ -4,8 +4,8 @@ Reproducible **Drain** baseline on LogHub-2k, scored with the four LogHub-2.0
 metrics: **GA**, **PA**, **FGA**, **FTA**.
 
 This is an evaluation harness, not a new parser. A stranger should be able to
-clone, run one command, and match the committed Apache_2k numbers. EFParser and
-any original parser are out of scope for this release.
+clone, run one command, and match the committed Apache_2k Drain numbers.
+EFParser is still unwired. Trail is an optional sibling plugin, not vendored.
 
 Keywords: log parsing, Drain, LogHub-2k, LogHub-2.0, grouping accuracy, parsing
 accuracy, FGA, FTA, reproducible evaluation.
@@ -28,6 +28,15 @@ Linux and OpenSSH 2k:
 ./reproduce.sh --drain-only Apache Linux OpenSSH
 ```
 
+Trail lives in a sibling checkout (`TRAIL_SRC`, else `../LogParser-Trail`). It
+is not a dependency of this repo. `--with-trail` runs Drain on Apache_2k, then
+Trail on the same file (and SecOps-2k when `../LogParser-Dataset` is present).
+Apache Drain scores still have to match `expected/drain_apache_2k.json`.
+
+```bash
+./reproduce.sh --with-trail
+```
+
 ## What is pinned
 
 | Item | Where |
@@ -37,6 +46,7 @@ Linux and OpenSSH 2k:
 | Drain `log_format`, `depth`, `st`, `regex` | `configs/drain.yaml` (from logpai/logparser Drain benchmark) |
 | Metric formulas | `harness/metrics.py` (Jiang et al., ISSTA'24 §4.2) |
 | Expected Apache scores | `expected/drain_apache_2k.json` |
+| Expected Apache Trail scores | `expected/trail_apache_2k.json` (sibling plugin) |
 | Python deps | `uv.lock` |
 | CI | `.github/workflows/drain-apache.yml` |
 

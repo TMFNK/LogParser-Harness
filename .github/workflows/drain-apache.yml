@@ -23,5 +23,18 @@ jobs:
           uv run python scripts/score.py --dataset Apache --parser drain
       - name: Golden
         run: uv run python scripts/verify_golden.py
+      - name: Trail Apache (sibling or TRAIL_SRC)
+        run: |
+          TRAIL="${TRAIL_SRC:-$GITHUB_WORKSPACE/../LogParser-Trail}"
+          if [ ! -d "$TRAIL/trailparse" ]; then
+            echo "skip Trail: no checkout at $TRAIL"
+            exit 0
+          fi
+          export TRAIL_SRC="$TRAIL"
+          uv run python scripts/run_trail.py --dataset Apache
+          uv run python scripts/score.py --dataset Apache --parser trail
+          uv run python scripts/verify_golden.py \
+            --expected expected/trail_apache_2k.json \
+            --actual results/raw/trail_apache_scores.json
       - name: Table
         run: uv run python scripts/make_table.py

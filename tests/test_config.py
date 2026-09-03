@@ -28,3 +28,13 @@ def test_expected_golden_keys():
     path = ROOT / "expected" / "drain_apache_2k.json"
     data = json.loads(path.read_text())
     assert set(data) >= {"GA", "PA", "FGA", "FTA", "parser", "dataset"}
+
+
+def test_trail_golden_keys():
+    import json
+
+    path = ROOT / "expected" / "trail_apache_2k.json"
+    data = json.loads(path.read_text())
+    assert data["parser"] == "trail"
+    assert data["dataset"] == "Apache_2k"
+    assert set(data) >= {"GA", "PA", "FGA", "FTA", "parser", "dataset"}
