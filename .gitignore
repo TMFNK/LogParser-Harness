@@ -1,0 +1,40 @@
+# env / data (large, re-downloadable)
+.venv/
+__pycache__/
+*.pyc
+dataset/
+*.log
+logs/*.log
+
+# LLM settings & secrets — NEVER commit (endpoints, keys, local overrides)
+.env
+.env.*
+*.pem
+*.key
+configs/*local*
+configs/*override*
+
+# model weights in any format (re-download from HF, never commit)
+*.gguf
+*.bin
+*.safetensors
+*.pt
+*.pth
+*.onnx
+*.ckpt
+
+# third-party checkouts (unlicensed upstream code — NEVER commit)
+third_party/
+
+# local run state (keep the published table, ignore raw pid files)
+results/raw/
+*.pid
+
+# eval vendor code (document pinned commit in README instead)
+/evaluation/*
+!/evaluation/.gitkeep
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/

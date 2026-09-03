@@ -1,0 +1,21 @@
+# EFParser backend config — local llama.cpp server, no cloud calls.
+# EFParser's own config.py reads the same values; keep them in sync.
+
+model:
+  # OpenAI-compatible endpoint served by scripts/start_parser_server.sh
+  base_url: "http://127.0.0.1:8090/v1"
+  # must match --alias in start_parser_server.sh
+  model: "qwen3.8-2b-q6k"
+  # dummy key — llama-server does not check it, EFParser's openai client needs one
+  api_key: "sk-local"
+  temperature: 0.0
+
+# EFParser source checkout (UPSTREAM HAS NO LICENSE — never copy its files
+# into this repo; each user clones it themselves, see README).
+# Relative paths resolve against the repo root; env EF_PARSER_SRC overrides.
+efparser_src: "./third_party/EFParser-Log-Parser"
+
+datasets:
+  - Apache
+  - Linux
+  - OpenSSH
