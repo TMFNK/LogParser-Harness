@@ -10,6 +10,38 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 KEYS = ("GA", "PA", "FGA", "FTA")
+IDENTITY_KEYS = ("parser", "dataset", "n_messages")
+PIN_KEYS = (
+    "config_hash",
+    "log_sha256",
+    "groundtruth_sha256",
+    "parsed_sha256",
+    "dataset_git_sha",
+)
+
+
+def mismatches(
+    expected: dict[str, object], actual: dict[str, object], atol: float
+) -> list[str]:
+    failed = []
+    for key in IDENTITY_KEYS:
+        if key not in expected or key not in actual:
+            failed.append(f"{key}: missing from expected or actual")
+        elif expected[key] != actual[key]:
+            failed.append(f"{key}: expected {expected[key]!r}, got {actual[key]!r}")
+    for key in KEYS:
+        if key not in expected or key not in actual:
+            failed.append(f"{key}: missing from expected or actual")
+        elif abs(float(expected[key]) - float(actual[key])) > atol:
+            failed.append(f"{key}: expected {expected[key]}, got {actual[key]}")
+    for key in PIN_KEYS:
+        if key not in expected:
+            continue
+        if key not in actual:
+            failed.append(f"{key}: missing from actual")
+        elif expected[key] != actual[key]:
+            failed.append(f"{key}: expected {expected[key]!r}, got {actual[key]!r}")
+    return failed
 
 
 def main() -> None:
@@ -31,12 +63,7 @@ def main() -> None:
         raise SystemExit(f"missing scores {actual_path}")
     actual = json.loads(actual_path.read_text())
 
-    failed = []
-    for key in KEYS:
-        exp = float(expected[key])
-        got = float(actual[key])
-        if abs(exp - got) > args.atol:
-            failed.append(f"{key}: expected {exp}, got {got}")
+    failed = mismatches(expected, actual, args.atol)
     if failed:
         raise SystemExit("golden mismatch:\n  " + "\n  ".join(failed))
     print(f"ok: {actual_path} matches {args.expected}")

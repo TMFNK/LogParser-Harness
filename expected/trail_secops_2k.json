@@ -1,0 +1,20 @@
+{
+  "parser": "trail",
+  "dataset": "SecOps_2k",
+  "GA": 0.874,
+  "PA": 0.641,
+  "FGA": 0.487179,
+  "FTA": 0.307692,
+  "n_messages": 2000,
+  "grouping": "tight",
+  "config_hash": "11b5ef1b243d2a9bb8cd9b548cc6dd52490cb696fee0f474acbffc3597323d8b",
+  "log_sha256": "17962c20701f8f2235453ba84c8b998e73dfe2ca4ae7575c2c5e6b531867f370",
+  "groundtruth_sha256": {
+    "tight": "9f4698950c96c7e464832bcc844db2856a4d8c4b7d460471945606da651061cd",
+    "loose": "1fd47e75d1a7ad7b6b8f7cb59f54d6c626caa384517e8ecf31027913cbe0bbf4"
+  },
+  "parsed_sha256": "858e92fc8dba201168bb63da7e0cee44ef39754192964fa6a7ddede05446e975",
+  "dataset_git_sha": "4ca6f2e8f9692f624b6dd7bc171c874f3fb1360c",
+  "settings": "LogParser-Trail@5bdd7bba configs/miner.yaml",
+  "data": "TMFNK/LogParser-Dataset@4ca6f2e SecOps-2k tight ground truth"
+}

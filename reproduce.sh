@@ -31,7 +31,7 @@ else
 fi
 
 echo "=== env ==="
-uv sync --extra dev
+uv sync --frozen --extra dev
 
 echo "=== fetch ==="
 fetch_args=()
@@ -44,11 +44,11 @@ echo "=== drain + score ==="
 for ds in "${datasets[@]}"; do
   uv run python scripts/run_drain.py --dataset "$ds"
   uv run python scripts/score.py --dataset "$ds" --parser drain
+  slug="$(printf '%s' "$ds" | tr '[:upper:]' '[:lower:]')"
+  uv run python scripts/verify_golden.py \
+    --expected "expected/drain_${slug}_2k.json" \
+    --actual "results/raw/drain_${slug}_scores.json"
 done
-
-if printf '%s\n' "${datasets[@]}" | grep -qx Apache; then
-  uv run python scripts/verify_golden.py
-fi
 
 if [[ "$mode" == "--with-trail" ]]; then
   echo "=== trail + score ==="
@@ -57,11 +57,15 @@ if [[ "$mode" == "--with-trail" ]]; then
   uv run python scripts/verify_golden.py \
     --expected expected/trail_apache_2k.json \
     --actual results/raw/trail_apache_scores.json
-  if [ -f ../LogParser-Dataset/dataset/SecOps_2k.log ]; then
+  dataset_src="${DATASET_SRC:-../LogParser-Dataset}"
+  if [ -f "$dataset_src/dataset/SecOps_2k.log" ]; then
     echo "=== trail SecOps-2k ==="
     uv run python scripts/run_trail.py --dataset SecOps
+    uv run python scripts/verify_golden.py \
+      --expected expected/trail_secops_2k.json \
+      --actual results/raw/trail_secops_scores.json
   else
-    echo "(skip SecOps-2k: ../LogParser-Dataset not found)"
+    echo "(skip SecOps-2k: $dataset_src not found)"
   fi
 fi
 

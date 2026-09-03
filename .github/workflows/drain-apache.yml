@@ -23,14 +23,16 @@ jobs:
           uv run python scripts/score.py --dataset Apache --parser drain
       - name: Golden
         run: uv run python scripts/verify_golden.py
-      - name: Trail Apache (sibling or TRAIL_SRC)
+      - name: Checkout pinned Trail
+        uses: actions/checkout@v4
+        with:
+          repository: TMFNK/LogParser-Trail
+          ref: 5bdd7bba1af5fae2c5c6b74f5fc73d92ad1e456d
+          path: LogParser-Trail
+      - name: Trail Apache
+        env:
+          TRAIL_SRC: ${{ github.workspace }}/LogParser-Trail
         run: |
-          TRAIL="${TRAIL_SRC:-$GITHUB_WORKSPACE/../LogParser-Trail}"
-          if [ ! -d "$TRAIL/trailparse" ]; then
-            echo "skip Trail: no checkout at $TRAIL"
-            exit 0
-          fi
-          export TRAIL_SRC="$TRAIL"
           uv run python scripts/run_trail.py --dataset Apache
           uv run python scripts/score.py --dataset Apache --parser trail
           uv run python scripts/verify_golden.py \

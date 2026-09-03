@@ -24,11 +24,11 @@ def sha256_text(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
-def git_sha() -> str | None:
+def git_sha(cwd: Path = ROOT) -> str | None:
     try:
         out = subprocess.check_output(
             ["git", "rev-parse", "HEAD"],
-            cwd=ROOT,
+            cwd=cwd,
             stderr=subprocess.DEVNULL,
             text=True,
         )

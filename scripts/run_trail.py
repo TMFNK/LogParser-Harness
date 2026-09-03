@@ -26,10 +26,8 @@ from harness.manifest import (  # noqa: E402
     uv_lock_hash,
     write_json,
 )
-from harness.metrics import score_all  # noqa: E402
+from harness.metrics import score_rows  # noqa: E402
 from harness.paths import log_path, raw_dir  # noqa: E402
-
-SECOPS_DIR = ROOT.parent / "LogParser-Dataset" / "dataset"
 
 
 def trail_src() -> Path:
@@ -41,6 +39,15 @@ def trail_src() -> Path:
             "set TRAIL_SRC or clone LogParser-Trail next to this repo"
         )
     return path
+
+
+def dataset_src() -> Path:
+    env = os.environ.get("DATASET_SRC")
+    return (
+        Path(env).expanduser().resolve()
+        if env
+        else ROOT.parent / "LogParser-Dataset"
+    )
 
 
 def _read_csv(path: Path) -> list[dict[str, str]]:
@@ -72,13 +79,7 @@ def _message(line: str, fmt_re: re.Pattern[str] | None, split_header) -> str:
 def _score_pair(gt_path: Path, parsed_path: Path) -> dict[str, float]:
     gt = _read_csv(gt_path)
     parsed = _read_csv(parsed_path)
-    n = min(len(gt), len(parsed))
-    return score_all(
-        [r["EventId"] for r in gt[:n]],
-        [r["EventId"] for r in parsed[:n]],
-        [r["EventTemplate"] for r in gt[:n]],
-        [r["EventTemplate"] for r in parsed[:n]],
-    )
+    return score_rows(gt, parsed)
 
 
 def main() -> None:
@@ -94,11 +95,14 @@ def main() -> None:
     cfg = yaml.safe_load((src / "configs" / "miner.yaml").read_text())
     st = float(cfg["st"])
     anchor_tokens = int(cfg["anchor_tokens"])
+    length_slack = int(cfg.get("length_slack", 0))
+    regex = list(cfg.get("regex") or [])
 
     drain_cfg = yaml.safe_load((ROOT / "configs" / "drain.yaml").read_text())
     fmt_re = None
     if args.dataset == "SecOps":
-        log_file = SECOPS_DIR / "SecOps_2k.log"
+        secops_dir = dataset_src() / "dataset"
+        log_file = secops_dir / "SecOps_2k.log"
     else:
         log_file = log_path(args.dataset)
         settings = drain_cfg.get("datasets", {}).get(args.dataset)
@@ -116,7 +120,12 @@ def main() -> None:
     structured = out_dir / f"{log_file.name}_structured.csv"
     config_hash = sha256_text(yaml.safe_dump(cfg, sort_keys=True))
 
-    miner = Miner(st=st, anchor_tokens=anchor_tokens)
+    miner = Miner(
+        st=st,
+        anchor_tokens=anchor_tokens,
+        length_slack=length_slack,
+        regex=regex,
+    )
     fed = []
     t0 = time.time()
     for i, raw in enumerate(log_file.read_text().splitlines(), start=1):
@@ -144,12 +153,15 @@ def main() -> None:
         "dataset": args.dataset,
         "st": st,
         "anchor_tokens": anchor_tokens,
+        "length_slack": length_slack,
+        "regex": regex,
         "n_templates": len(miner.clusters),
         "config_hash": config_hash,
         "log_sha256": sha256_file(log_file),
         "parsed_csv": str(structured.relative_to(ROOT)),
         "wall_time_s": round(elapsed, 3),
         "git_sha": git_sha(),
+        "trail_git_sha": git_sha(src),
         "python": python_version(),
         "uv_lock_sha256": uv_lock_hash(),
         "metrics_impl": "harness.metrics (Apache-2.0, Jiang et al. ISSTA'24 formulas)",
@@ -157,10 +169,10 @@ def main() -> None:
     write_json(out_dir / f"trail_{args.dataset.lower()}.json", meta)
 
     if args.dataset == "SecOps":
-        tight = SECOPS_DIR / "SecOps_2k.log_structured.csv"
-        loose = SECOPS_DIR / "SecOps_2k.log_structured_loose.csv"
+        tight = secops_dir / "SecOps_2k.log_structured.csv"
+        loose = secops_dir / "SecOps_2k.log_structured_loose.csv"
         if not tight.exists() or not loose.exists():
-            raise SystemExit(f"missing SecOps ground truth under {SECOPS_DIR}")
+            raise SystemExit(f"missing SecOps ground truth under {secops_dir}")
         tight_scores = {
             k: round(v, 6) for k, v in _score_pair(tight, structured).items()
         }
@@ -177,6 +189,16 @@ def main() -> None:
             "grouping": "tight",
             "tight": tight_scores,
             "loose": loose_scores,
+            "config_hash": config_hash,
+            "log_sha256": sha256_file(log_file),
+            "groundtruth_sha256": {
+                "tight": sha256_file(tight),
+                "loose": sha256_file(loose),
+            },
+            "parsed_sha256": sha256_file(structured),
+            "git_sha": git_sha(),
+            "trail_git_sha": git_sha(src),
+            "dataset_git_sha": git_sha(secops_dir.parent),
             "metrics_impl": "harness.metrics",
         }
         write_json(out_dir / "trail_secops_scores.json", payload)

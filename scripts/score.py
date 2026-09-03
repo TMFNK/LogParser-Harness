@@ -5,11 +5,10 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import sys
 from pathlib import Path
-
-import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -20,8 +19,13 @@ from harness.manifest import (  # noqa: E402
     uv_lock_hash,
     write_json,
 )
-from harness.metrics import score_all  # noqa: E402
+from harness.metrics import score_rows  # noqa: E402
 from harness.paths import groundtruth_path, raw_dir  # noqa: E402
+
+
+def _read_csv(path: Path) -> list[dict[str, str]]:
+    with path.open(newline="") as f:
+        return list(csv.DictReader(f))
 
 
 def main() -> None:
@@ -48,24 +52,12 @@ def main() -> None:
     if not parsed_path.exists():
         raise SystemExit(f"missing parsed output {parsed_path}")
 
-    gt = pd.read_csv(gt_path)
-    parsed = pd.read_csv(parsed_path)
-    n = min(len(gt), len(parsed))
-    if len(gt) != len(parsed):
-        print(
-            f"warning: row count gt={len(gt)} parsed={len(parsed)}; "
-            f"scoring first {n} rows",
-            file=sys.stderr,
-        )
-        gt = gt.iloc[:n]
-        parsed = parsed.iloc[:n]
-
-    scores = score_all(
-        gt["EventId"].tolist(),
-        parsed["EventId"].tolist(),
-        gt["EventTemplate"].tolist(),
-        parsed["EventTemplate"].tolist(),
-    )
+    gt = _read_csv(gt_path)
+    parsed = _read_csv(parsed_path)
+    try:
+        scores = score_rows(gt, parsed)
+    except (KeyError, ValueError) as exc:
+        raise SystemExit(f"cannot score {parsed_path}: {exc}") from exc
     run_meta_path = raw_dir() / f"{args.parser}_{args.dataset.lower()}.json"
     wall = None
     if run_meta_path.exists():
@@ -75,7 +67,7 @@ def main() -> None:
         "parser": args.parser,
         "dataset": f"{args.dataset}_2k",
         **{k: round(v, 6) for k, v in scores.items()},
-        "n_messages": n,
+        "n_messages": len(gt),
         "wall_time_s": wall,
         "groundtruth_sha256": sha256_file(gt_path),
         "parsed_sha256": sha256_file(parsed_path),

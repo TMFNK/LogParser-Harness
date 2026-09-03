@@ -94,29 +94,20 @@ def fga(gt_ids: Sequence[object], parsed_ids: Sequence[object]) -> float:
 
 
 def _correctly_identified_template_count(
-    gt_ids: Sequence[object],
-    parsed_ids: Sequence[object],
-    gt_templates: Sequence[object],
-    parsed_templates: Sequence[object],
+    gt_templates: Sequence[object], parsed_templates: Sequence[object]
 ) -> int:
-    """N̂_c: correctly grouped templates whose tokens also match.
-
-    For each matching message-set pair, compare the (unique) template token
-    sequence on the ground-truth side with the parsed side.
-    """
-    gt_groups = _group_indices(gt_ids)
-    parsed_groups = _group_indices(parsed_ids)
-    parsed_by_set = {s: True for s in parsed_groups.values()}
-    n_hat = 0
-    for gt_set in gt_groups.values():
-        if gt_set not in parsed_by_set:
-            continue
-        i = next(iter(gt_set))
-        if _normalize_template(gt_templates[i]) == _normalize_template(
-            parsed_templates[i]
-        ):
-            n_hat += 1
-    return n_hat
+    """N̂_c: parsed templates that map only to the same ground-truth template."""
+    groundtruth_by_parsed: dict[tuple[str, ...], set[tuple[str, ...]]] = defaultdict(
+        set
+    )
+    for gt, parsed in zip(gt_templates, parsed_templates):
+        groundtruth_by_parsed[_normalize_template(parsed)].add(
+            _normalize_template(gt)
+        )
+    return sum(
+        groundtruth == {parsed}
+        for parsed, groundtruth in groundtruth_by_parsed.items()
+    )
 
 
 def fta(
@@ -127,7 +118,8 @@ def fta(
 ) -> float:
     """F1 of template accuracy (strictest LogHub-2.0 score).
 
-    A template is correct iff the message set matches and every token matches.
+    A parsed template is correct iff all of its messages share one ground-truth
+    template and its tokens match that template.
     PTA = N̂_c / N_p, RTA = N̂_c / N_g.
     """
     if not (
@@ -137,13 +129,11 @@ def fta(
         == len(parsed_templates)
     ):
         raise ValueError("all sequences must have the same length")
-    n_g = len(_group_indices(gt_ids))
-    n_p = len(_group_indices(parsed_ids))
+    n_g = len({_normalize_template(template) for template in gt_templates})
+    n_p = len({_normalize_template(template) for template in parsed_templates})
     if n_g == 0 or n_p == 0:
         return 0.0
-    n_hat = _correctly_identified_template_count(
-        gt_ids, parsed_ids, gt_templates, parsed_templates
-    )
+    n_hat = _correctly_identified_template_count(gt_templates, parsed_templates)
     pta = n_hat / n_p
     rta = n_hat / n_g
     return _f1(pta, rta)
@@ -172,4 +162,46 @@ def score_frames(
         list(parsed["EventId"]),
         list(gt["EventTemplate"]),
         list(parsed["EventTemplate"]),
+    )
+
+
+def align_rows(
+    gt_rows: Sequence[Mapping[str, object]],
+    parsed_rows: Sequence[Mapping[str, object]],
+) -> tuple[list[Mapping[str, object]], list[Mapping[str, object]]]:
+    """Align structured rows by LineId and reject incomplete parser output."""
+
+    def index(
+        rows: Sequence[Mapping[str, object]], label: str
+    ) -> dict[object, Mapping[str, object]]:
+        indexed: dict[object, Mapping[str, object]] = {}
+        for row in rows:
+            if "LineId" not in row:
+                raise ValueError(f"{label} row is missing LineId")
+            line_id = row["LineId"]
+            if line_id in indexed:
+                raise ValueError(f"{label} has duplicate LineId {line_id!r}")
+            indexed[line_id] = row
+        return indexed
+
+    gt_by_id = index(gt_rows, "ground truth")
+    parsed_by_id = index(parsed_rows, "parsed output")
+    if gt_by_id.keys() != parsed_by_id.keys():
+        missing = sorted(gt_by_id.keys() - parsed_by_id.keys(), key=str)
+        extra = sorted(parsed_by_id.keys() - gt_by_id.keys(), key=str)
+        raise ValueError(f"LineId mismatch: missing={missing}, extra={extra}")
+    return list(gt_rows), [parsed_by_id[row["LineId"]] for row in gt_rows]
+
+
+def score_rows(
+    gt_rows: Sequence[Mapping[str, object]],
+    parsed_rows: Sequence[Mapping[str, object]],
+) -> dict[str, float]:
+    """Score complete structured rows after aligning them by LineId."""
+    gt, parsed = align_rows(gt_rows, parsed_rows)
+    return score_all(
+        [row["EventId"] for row in gt],
+        [row["EventId"] for row in parsed],
+        [row["EventTemplate"] for row in gt],
+        [row["EventTemplate"] for row in parsed],
     )

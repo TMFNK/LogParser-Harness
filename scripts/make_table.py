@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2026 MbitAI — see NOTICE for attribution.
-"""Build results/results.md from per-run score JSON files."""
+"""Build the stable Tier A result table from committed Drain goldens."""
 
 from __future__ import annotations
 
@@ -12,14 +12,14 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from harness.paths import ROOT as HROOT  # noqa: E402
-from harness.paths import raw_dir  # noqa: E402
 
 OUT = HROOT / "results" / "results.md"
+EXPECTED = HROOT / "expected"
 
 
 def main() -> None:
     rows = []
-    for p in sorted(raw_dir().glob("*_scores.json")):
+    for p in sorted(EXPECTED.glob("drain_*_2k.json")):
         rows.append(json.loads(p.read_text()))
 
     lines = [
@@ -30,20 +30,20 @@ def main() -> None:
         "(logpai/logparser Drain benchmark). Data: Loghub-2.0 `2k_dataset/`,",
         "commit pinned in `configs/datasets.yaml`.",
         "",
-        "| Dataset | Parser | GA | PA | FGA | FTA | Time |",
-        "|---|---|---|---|---|---|---|",
+        "These reference rows come from the committed Drain golden files in",
+        "`expected/`; wall time remains machine-dependent and is recorded only in",
+        "each local `results/raw/*_scores.json`.",
+        "",
+        "| Dataset | Parser | GA | PA | FGA | FTA |",
+        "|---|---|---|---|---|---|",
     ]
     for r in rows:
         lines.append(
             f"| {r.get('dataset')} | {r.get('parser')} | {r.get('GA')} | "
-            f"{r.get('PA')} | {r.get('FGA')} | {r.get('FTA')} | "
-            f"{r.get('wall_time_s')}s |"
+            f"{r.get('PA')} | {r.get('FGA')} | {r.get('FTA')} |"
         )
     if not rows:
-        lines.append("| — | no scored runs yet | — | — | — | — | — |")
-    lines.append("")
-    lines.append("Each `results/raw/*_scores.json` carries file hashes and git SHA.")
-    lines.append("")
+        lines.append("| — | no committed Drain goldens | — | — | — | — |")
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text("\n".join(lines) + "\n")
     print("\n".join(lines))

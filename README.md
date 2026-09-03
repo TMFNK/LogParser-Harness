@@ -12,6 +12,14 @@ accuracy, FGA, FTA, reproducible evaluation.
 
 GitHub topics: `log-parsing` `log-parser` `benchmark` `reproducibility` `drain`
 
+## Project pipeline
+
+- **Tier A — this harness:** reproducible Drain evaluation on LogHub-2k.
+- **Tier B — [LogParser-Dataset](https://github.com/TMFNK/LogParser-Dataset):**
+  the synthetic SecOps-2k dataset, grouping rules, and Drain baseline.
+- **Tier C — [LogParser-Trail](https://github.com/TMFNK/LogParser-Trail):**
+  the auditable parser, its SecOps-2k results, and local-model assist.
+
 ## One-command run
 
 ```bash
@@ -28,10 +36,13 @@ Linux and OpenSSH 2k:
 ./reproduce.sh --drain-only Apache Linux OpenSSH
 ```
 
-Trail lives in a sibling checkout (`TRAIL_SRC`, else `../LogParser-Trail`). It
-is not a dependency of this repo. `--with-trail` runs Drain on Apache_2k, then
-Trail on the same file (and SecOps-2k when `../LogParser-Dataset` is present).
-Apache Drain scores still have to match `expected/drain_apache_2k.json`.
+[Trail](https://github.com/TMFNK/LogParser-Trail) is optional and not
+vendored. Point `TRAIL_SRC` at a local checkout, or use the sibling default
+`../LogParser-Trail`. `--with-trail` runs Drain on Apache_2k, then Trail on the
+same file. It also runs Trail on
+[SecOps-2k](https://github.com/TMFNK/LogParser-Dataset) when that repository is
+checked out at `../LogParser-Dataset`; set `DATASET_SRC` for another checkout
+location. Apache Drain scores still have to match `expected/drain_apache_2k.json`.
 
 ```bash
 ./reproduce.sh --with-trail
@@ -47,6 +58,8 @@ Apache Drain scores still have to match `expected/drain_apache_2k.json`.
 | Metric formulas | `harness/metrics.py` (Jiang et al., ISSTA'24 §4.2) |
 | Expected Apache scores | `expected/drain_apache_2k.json` |
 | Expected Apache Trail scores | `expected/trail_apache_2k.json` (sibling plugin) |
+| Expected SecOps-2k Trail scores | `expected/trail_secops_2k.json` (sibling dataset) |
+| Trail revision exercised by CI | `.github/workflows/drain-apache.yml` |
 | Python deps | `uv.lock` |
 | CI | `.github/workflows/drain-apache.yml` |
 
@@ -61,12 +74,13 @@ Independent Apache-2.0 code. We do not copy Loghub-2.0 `benchmark/evaluation/`
 - **GA** — share of messages whose parsed group equals the ground-truth group
 - **PA** — share of messages whose template tokens match exactly
 - **FGA** — F1 of grouping accuracy at template level (rare and common templates equal)
-- **FTA** — F1 of template accuracy (group set and tokens both match)
+- **FTA** — F1 of exact template identification (one ground-truth template
+  per parsed template, with matching tokens)
 
 ## Manual steps
 
 ```bash
-uv sync --extra dev
+uv sync --frozen --extra dev
 uv run python scripts/fetch_assets.py --dataset Apache
 uv run python scripts/run_drain.py --dataset Apache
 uv run python scripts/score.py --dataset Apache --parser drain

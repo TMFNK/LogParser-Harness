@@ -20,21 +20,33 @@ def test_datasets_yaml_pins_commit():
     assert len(cfg["source"]["commit"]) == 40
     for name in ("Apache", "Linux", "OpenSSH"):
         assert "2k_dataset" in cfg["datasets"][name]["log"]["path"]
+        assert len(cfg["datasets"][name]["log"]["sha256"]) == 64
+        assert len(cfg["datasets"][name]["structured"]["sha256"]) == 64
 
 
-def test_expected_golden_keys():
+def test_expected_drain_golden_keys():
     import json
 
-    path = ROOT / "expected" / "drain_apache_2k.json"
-    data = json.loads(path.read_text())
-    assert set(data) >= {"GA", "PA", "FGA", "FTA", "parser", "dataset"}
+    for name in ("apache", "linux", "openssh"):
+        path = ROOT / "expected" / f"drain_{name}_2k.json"
+        data = json.loads(path.read_text())
+        assert data["parser"] == "drain"
+        assert set(data) >= {"GA", "PA", "FGA", "FTA", "parser", "dataset"}
 
 
 def test_trail_golden_keys():
     import json
 
-    path = ROOT / "expected" / "trail_apache_2k.json"
-    data = json.loads(path.read_text())
-    assert data["parser"] == "trail"
-    assert data["dataset"] == "Apache_2k"
-    assert set(data) >= {"GA", "PA", "FGA", "FTA", "parser", "dataset"}
+    for name in ("apache", "secops"):
+        path = ROOT / "expected" / f"trail_{name}_2k.json"
+        data = json.loads(path.read_text())
+        assert data["parser"] == "trail"
+        assert set(data) >= {
+            "GA",
+            "PA",
+            "FGA",
+            "FTA",
+            "parser",
+            "dataset",
+            "n_messages",
+        }

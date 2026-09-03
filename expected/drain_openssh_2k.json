@@ -1,0 +1,11 @@
+{
+  "parser": "drain",
+  "dataset": "OpenSSH_2k",
+  "GA": 0.789,
+  "PA": 0.508,
+  "FGA": 0.88,
+  "FTA": 0.44,
+  "n_messages": 2000,
+  "settings": "configs/drain.yaml OpenSSH (logpai/logparser Drain benchmark)",
+  "data": "logpai/Loghub-2.0@ac4aad2ea86f561e5a0acbc6587fa28b487259f9 2k_dataset/OpenSSH"
+}

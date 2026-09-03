@@ -49,7 +49,10 @@ def main() -> None:
 
     log_file = ROOT / "dataset" / args.dataset / f"{args.dataset}_2k.log"
     if not log_file.exists():
-        raise SystemExit(f"log file missing: {log_file} (see README section 3)")
+        raise SystemExit(
+            f"log file missing: {log_file}\n"
+            f"run: uv run python scripts/fetch_assets.py --dataset {args.dataset}"
+        )
 
     # Health-check the local backend before spending time on parsing.
     base_url = cfg["model"]["base_url"].rstrip("/")
