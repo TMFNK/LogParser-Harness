@@ -1,35 +1,34 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2026 MbitAI — see NOTICE for attribution.
-"""Build results/results.md from per-run score JSON files.
+"""Build results/results.md from per-run score JSON files."""
 
-Usage:
-    python scripts/make_table.py
-
-Reads results/raw/*_scores.json files of shape:
-    {"parser": ..., "dataset": ..., "GA": ..., "PA": ..., "FGA": ..., "FTA": ...,
-     "wall_time_s": ...}
-Writes the markdown table to results/results.md (stdout too).
-"""
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-RAW = ROOT / "results" / "raw"
-OUT = ROOT / "results" / "results.md"
+sys.path.insert(0, str(ROOT))
+
+from harness.paths import ROOT as HROOT  # noqa: E402
+from harness.paths import raw_dir  # noqa: E402
+
+OUT = HROOT / "results" / "results.md"
 
 
 def main() -> None:
     rows = []
-    for p in sorted(RAW.glob("*_scores.json")):
+    for p in sorted(raw_dir().glob("*_scores.json")):
         rows.append(json.loads(p.read_text()))
 
     lines = [
-        "# Tier A results",
+        "# Drain reproduction (LogHub-2k)",
         "",
-        "Eval: Loghub-2.0 `benchmark/evaluation/` (commit recorded in README).",
-        "Backend for EFParser: local llama-server + Qwen3.8-2B-Q6_K.",
+        "Scorer: `harness.metrics` (Apache-2.0 implementation of Jiang et al.,",
+        "ISSTA'24 GA / PA / FGA / FTA). Drain settings from `configs/drain.yaml`",
+        "(logpai/logparser Drain benchmark). Data: Loghub-2.0 `2k_dataset/`,",
+        "commit pinned in `configs/datasets.yaml`.",
         "",
         "| Dataset | Parser | GA | PA | FGA | FTA | Time |",
         "|---|---|---|---|---|---|---|",
@@ -43,7 +42,10 @@ def main() -> None:
     if not rows:
         lines.append("| — | no scored runs yet | — | — | — | — | — |")
     lines.append("")
-    OUT.write_text("\n".join(lines))
+    lines.append("Each `results/raw/*_scores.json` carries file hashes and git SHA.")
+    lines.append("")
+    OUT.parent.mkdir(parents=True, exist_ok=True)
+    OUT.write_text("\n".join(lines) + "\n")
     print("\n".join(lines))
 
 

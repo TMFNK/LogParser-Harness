@@ -1,0 +1,12 @@
+{
+  "parser": "drain",
+  "dataset": "Apache_2k",
+  "GA": 1.0,
+  "PA": 0.6935,
+  "FGA": 1.0,
+  "FTA": 0.5,
+  "n_messages": 2000,
+  "settings": "configs/drain.yaml Apache (logpai/logparser Drain benchmark)",
+  "data": "logpai/Loghub-2.0@ac4aad2ea86f561e5a0acbc6587fa28b487259f9 2k_dataset/Apache",
+  "notes": "GA=1.0 matches the logpai Drain Apache_2k grouping accuracy. The toolkit print name Parsing_Accuracy is grouping, not token PA. PA and FTA here are token-level."
+}

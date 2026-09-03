@@ -3,6 +3,12 @@ Copyright 2026 MbitAI — https://www.mbitai.com
 
 This product includes software developed by MbitAI (https://www.mbitai.com).
 
+Drain is invoked via the logparser3 package (LOGPAI, Apache-2.0):
+https://github.com/logpai/logparser
+
+LogHub-2k files are fetched at runtime from logpai/Loghub-2.0 and remain
+subject to LogHub research-use citation terms (see README).
+
 Per Apache License 2.0 section 4(d), any Derivative Works you distribute
 must include a readable copy of these attribution notices. This NOTICE
 file may not be removed.

@@ -30,9 +30,7 @@ third_party/
 results/raw/
 *.pid
 
-# eval vendor code (document pinned commit in README instead)
-/evaluation/*
-!/evaluation/.gitkeep
+# do not vendor GPL eval from Loghub-2.0 (see evaluation/README.md)
 
 # OS / editor
 .DS_Store

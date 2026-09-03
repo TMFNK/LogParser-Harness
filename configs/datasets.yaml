@@ -1,0 +1,31 @@
+# 2k LogHub files. Fetched at runtime; never committed.
+# Ground-truth CSVs are the Loghub-2k structured labels shipped in
+# logpai/Loghub-2.0 2k_dataset/ (research use; cite both LogHub papers).
+
+source:
+  repo: https://github.com/logpai/Loghub-2.0
+  commit: ac4aad2ea86f561e5a0acbc6587fa28b487259f9
+  note: 2k_dataset only. Full LogHub-2.0 is out of scope for this harness.
+
+datasets:
+  Apache:
+    log:
+      path: 2k_dataset/Apache/Apache_2k.log
+      sha256: 0e51c532c9b82b49234f5691ed96d7b584eaeef9f35839b9c365769a80294705
+    structured:
+      path: 2k_dataset/Apache/Apache_2k.log_structured.csv
+      sha256: 3828367f0dfcd4e648b833901e9862f7a34527e769aea1946d5697f0bd0c4168
+  Linux:
+    log:
+      path: 2k_dataset/Linux/Linux_2k.log
+      sha256: 6d50cefa82380651f910df35fda0995a237a3c788b7b2e3d2d37e51fb9debca9
+    structured:
+      path: 2k_dataset/Linux/Linux_2k.log_structured.csv
+      sha256: e4afaa1ca3712aad3221628333d767631b94c7db6ac59222306fd08097a8c6f3
+  OpenSSH:
+    log:
+      path: 2k_dataset/OpenSSH/OpenSSH_2k.log
+      sha256: 16da02f37eb00cec9ec65c4d71175897be45b266aa7d6e01b26186678e2288b8
+    structured:
+      path: 2k_dataset/OpenSSH/OpenSSH_2k.log_structured.csv
+      sha256: 6ecc2b3b3e4065e5aabe893ad61ca059a505c152fe3181e512a4512cfe626507

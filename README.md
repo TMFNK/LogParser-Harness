@@ -1,102 +1,95 @@
 # LogParser-Harness
 
-A reproducible harness that runs two log parsers on LogHub-2.0 2k datasets
-and scores them with the same shared eval code: **Drain** (the classic
-baseline) and **EFParser** (a 2026 small-model LLM parser). Output is one
-honest table per dataset: GA / PA / FGA / FTA plus wall time.
+Reproducible **Drain** baseline on LogHub-2k, scored with the four LogHub-2.0
+metrics: **GA**, **PA**, **FGA**, **FTA**.
 
-Why this exists: most parser papers report message-level accuracy, which
-hides failures on rare templates. This harness reports all four LogHub-2.0
-metrics, including the template-level FGA and FTA that treat rare and common
-templates equally, with fixed settings anyone can re-run.
+This is an evaluation harness, not a new parser. A stranger should be able to
+clone, run one command, and match the committed Apache_2k numbers. EFParser and
+any original parser are out of scope for this release.
 
-Keywords: log parsing, log parser benchmark, eval harness, reproducible
-evaluation, Drain, EFParser, LogHub-2.0, small language models, offline
-on-prem parsing, open-weights models.
+Keywords: log parsing, Drain, LogHub-2k, LogHub-2.0, grouping accuracy, parsing
+accuracy, FGA, FTA, reproducible evaluation.
 
-Suggested GitHub topics: `log-parsing` `llm-evaluation` `harness`
-`anomaly-detection` `small-language-models` `reproducibility`
-
-## Stack
-
-- Python >= 3.12, `uv` (or Poetry)
-- Parsers: Drain (`logpai/logparser`), EFParser (`LogAnalysisTech/EFParser-Log-Parser`)
-- Eval: `logpai/Loghub-2.0` `benchmark/evaluation/` (pinned commit, see below)
-- Model backend: llama.cpp `llama-server` only (no Ollama, no cloud APIs),
-  with Qwen3.8-2B-Q6_K (`empero-ai/Qwen3.8-2B-Distill-GGUF`, local, 1.5 GB)
-- Data: LogHub-2.0 2k datasets only (runs on an 8 GB Mac)
+GitHub topics: `log-parsing` `log-parser` `benchmark` `reproducibility` `drain`
 
 ## One-command run
 
 ```bash
-./reproduce.sh
+./reproduce.sh --drain-only
 ```
 
-This runs Drain on Apache_2k, starts `llama-server`, runs EFParser on
-Apache_2k, scores both, and writes `results/results.md`.
+Needs Python 3.12+ and [uv](https://docs.astral.sh/uv/). Downloads Apache_2k
+from a pinned Loghub-2.0 commit, runs Drain with the logpai benchmark settings,
+scores, checks `expected/drain_apache_2k.json`, and writes `results/results.md`.
+
+Linux and OpenSSH 2k:
+
+```bash
+./reproduce.sh --drain-only Apache Linux OpenSSH
+```
+
+## What is pinned
+
+| Item | Where |
+|---|---|
+| Loghub-2.0 git commit (2k files only) | `configs/datasets.yaml` |
+| File sha256 | same file, checked on fetch |
+| Drain `log_format`, `depth`, `st`, `regex` | `configs/drain.yaml` (from logpai/logparser Drain benchmark) |
+| Metric formulas | `harness/metrics.py` (Jiang et al., ISSTA'24 §4.2) |
+| Expected Apache scores | `expected/drain_apache_2k.json` |
+| Python deps | `uv.lock` |
+| CI | `.github/workflows/drain-apache.yml` |
+
+Each scored run also writes `results/raw/drain_<dataset>_scores.json` with
+dataset hashes, git SHA, and wall time.
+
+## Metrics
+
+Independent Apache-2.0 code. We do not copy Loghub-2.0 `benchmark/evaluation/`
+(GPL-3 / TA-Eval-Rep). See `evaluation/README.md`.
+
+- **GA** — share of messages whose parsed group equals the ground-truth group
+- **PA** — share of messages whose template tokens match exactly
+- **FGA** — F1 of grouping accuracy at template level (rare and common templates equal)
+- **FTA** — F1 of template accuracy (group set and tokens both match)
 
 ## Manual steps
 
 ```bash
-# 1. env
-uv sync
-
-# 2. fetch eval code (pin the commit you used, record it here)
-git clone --depth 1 https://github.com/logpai/Loghub-2.0 /tmp/loghub2
-cp -r /tmp/loghub2/benchmark/evaluation/* ./evaluation/
-
-# 2b. fetch EFParser yourself (upstream has no license file, so this
-# repo never vendors it — clone into the git-ignored third_party/)
-git clone https://github.com/LogAnalysisTech/EFParser-Log-Parser \
-  third_party/EFParser-Log-Parser
-
-# 3. put 2k logs in dataset/  (Apache, Linux, OpenSSH first)
-#    source: Loghub-2.0 2k_dataset/ + EFParser-Log-Parser-main/dataset/
-
-# 4. model server (llama.cpp, 127.0.0.1 only — never localhost)
-./scripts/start_parser_server.sh start
-curl 127.0.0.1:8090/v1/models
-
-# 5. run + score (uv run uses the synced .venv)
+uv sync --extra dev
+uv run python scripts/fetch_assets.py --dataset Apache
 uv run python scripts/run_drain.py --dataset Apache
-uv run python scripts/run_efparser.py --dataset Apache
-uv run python scripts/make_table.py   # -> results/results.md
-
-# 6. stop server
-./scripts/start_parser_server.sh stop
+uv run python scripts/score.py --dataset Apache --parser drain
+uv run python scripts/verify_golden.py
+uv run python scripts/make_table.py
+uv run pytest -q
 ```
-
-Eval commit pinned: _fill in after first run, e.g. `logpai/Loghub-2.0@<sha>`_
 
 ## Results
 
-See `results/results.md` (per dataset GA / PA / FGA / FTA + wall time).
+See `results/results.md`. Apache_2k Drain is the CI golden. Linux_2k grouping
+accuracy matches the logpai Drain toolkit (GA 0.69).
 
 ## License
 
-Apache-2.0, copyright 2026 MbitAI. See LICENSE and
-NOTICE — redistribution must preserve the Mbitai attribution.
+Apache-2.0, copyright 2026 MbitAI. See LICENSE and NOTICE.
 
-Need help applying this to your own log pipelines or data-quality work?
-Contact https://www.mbitai.com.
+Need this applied to your own log pipelines? https://www.mbitai.com
 
-## Must-cite (LogHub-2.0 terms)
+## Must-cite (LogHub terms)
 
-The LogHub-2.0 datasets are for research/academic use and require
-citing both papers in any publication of results:
+The LogHub-2k files are for research use. Cite both papers if you publish
+numbers from this harness:
 
-- Zhihan Jiang et al., "A Large-scale Evaluation for Log Parsing
-  Techniques: How Far are We?" ISSTA, 2024.
-  https://arxiv.org/abs/2308.10828
-- Jieming Zhu et al., "LogHub: A Large Collection of System Log
-  Datasets for AI-driven Log Analytics." ISSRE, 2023.
-  https://arxiv.org/abs/2008.06448
+- Zhihan Jiang et al., "A Large-scale Evaluation for Log Parsing Techniques:
+  How Far are We?" ISSTA, 2024. https://arxiv.org/abs/2308.10828
+- Jieming Zhu et al., "LogHub: A Large Collection of System Log Datasets for
+  AI-driven Log Analytics." ISSRE, 2023. https://arxiv.org/abs/2008.06448
+- Drain: Pinjia He et al., ICWS 2017. logpai/logparser (Apache-2.0)
 
 ## Limitations
 
-- 2k scale only; full LogHub-2.0 needs 16 GB RAM / 100 GB disk.
-- Linux/OpenSSH Drain formats still need copying from
-  `run_statistic_2k.sh` (marked in `configs/drain.ini`).
-- `run_efparser.py` needs wiring to the EFParser entry point on first run.
-- Ground-truth labels are disputed (SLGParser report, corrected Zenodo
-  re-release); this harness reports scores, it does not fix labels.
+- 2k scale only. Full LogHub-2.0 needs 16 GB RAM and 100 GB disk.
+- Ground-truth labels are disputed (SLGParser, Zenodo corrected release). This
+  harness reports scores; it does not relabel.
+- EFParser is not wired. Upstream has no license file; this repo never vendors it.

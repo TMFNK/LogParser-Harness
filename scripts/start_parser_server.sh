@@ -22,7 +22,9 @@ mkdir -p "${LOG_DIR}"
 
 MODEL="${MODEL:-}"
 if [[ -z "${MODEL}" ]]; then
-  MODEL="/Users/edis-mac/.cache/huggingface/hub/models--empero-ai--Qwen3.8-2B-Distill-GGUF/snapshots/f4f73582d0b149595450c719b9a7521a03894f9c/Qwen3.8-2B-Q6_K.gguf"
+  echo "error: set MODEL to a GGUF path (Phase 2 EFParser only; Drain does not need this)" >&2
+  echo "example: MODEL=/path/to/Qwen3.8-2B-Q6_K.gguf $0 start" >&2
+  exit 1
 fi
 
 # Resolve HF snapshot symlink to the real blob file.

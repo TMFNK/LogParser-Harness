@@ -1,68 +1,86 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2026 MbitAI — see NOTICE for attribution.
-"""Run Drain on one 2k dataset and save raw parsed output for scoring.
+"""Run Drain on one 2k dataset with Loghub benchmark settings."""
 
-Usage:
-    python scripts/run_drain.py --dataset Apache
-
-Reads settings from configs/drain.ini, logs from dataset/<Name>/,
-writes results/raw/drain_<name>.csv + .json (with wall time).
-"""
 from __future__ import annotations
 
 import argparse
-import configparser
-import json
+import sys
 import time
 from pathlib import Path
 
+import yaml
+
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from harness.manifest import (  # noqa: E402
+    git_sha,
+    python_version,
+    sha256_file,
+    sha256_text,
+    uv_lock_hash,
+    write_json,
+)
+from harness.paths import log_path, raw_dir  # noqa: E402
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--dataset", required=True, help="e.g. Apache, Linux, OpenSSH")
+    ap.add_argument("--dataset", required=True)
     args = ap.parse_args()
 
-    cfg = configparser.ConfigParser()
-    cfg.read(ROOT / "configs" / "drain.ini")
-    if args.dataset not in cfg:
-        raise SystemExit(f"no [{args.dataset}] section in configs/drain.ini")
-
-    log_file = ROOT / "dataset" / args.dataset / f"{args.dataset}_2k.log"
+    cfg = yaml.safe_load((ROOT / "configs" / "drain.yaml").read_text())
+    if args.dataset not in cfg["datasets"]:
+        raise SystemExit(f"no dataset {args.dataset} in configs/drain.yaml")
+    settings = cfg["datasets"][args.dataset]
+    log_file = log_path(args.dataset)
     if not log_file.exists():
-        raise SystemExit(f"log file missing: {log_file} (see README section 3)")
+        raise SystemExit(
+            f"missing {log_file}\n"
+            f"run: uv run python scripts/fetch_assets.py --dataset {args.dataset}"
+        )
 
-    from logparser.Drain import LogParser  # pip/uv extra: drain
+    from logparser.Drain import LogParser
 
-    settings = cfg[args.dataset]
-    out_dir = ROOT / "results" / "raw"
-    out_dir.mkdir(parents=True, exist_ok=True)
+    out_dir = raw_dir()
+    indir = str(log_file.parent)
+    filename = log_file.name
+    config_hash = sha256_text(yaml.safe_dump(settings, sort_keys=True))
 
     t0 = time.time()
     parser = LogParser(
-        str(log_file),
-        outdir=str(out_dir),
-        depth=int(settings.get("depth", 4)),
-        simTh=float(settings.get("sim_th", 0.4)),
-        maxChild=int(settings.get("max_children", 100)),
         log_format=settings["log_format"],
+        indir=indir,
+        outdir=str(out_dir),
+        depth=int(settings["depth"]),
+        st=float(settings["st"]),
+        maxChild=int(settings.get("max_children", 100)),
+        rex=list(settings.get("regex") or []),
     )
-    parser.parse(str(log_file))
+    parser.parse(filename)
     elapsed = time.time() - t0
 
+    structured = out_dir / f"{filename}_structured.csv"
     meta = {
         "parser": "drain",
+        "parser_impl": "logparser3 / logpai.Drain",
         "dataset": args.dataset,
         "log_format": settings["log_format"],
-        "depth": settings.get("depth"),
-        "sim_th": settings.get("sim_th"),
-        "max_children": settings.get("max_children"),
-        "wall_time_s": round(elapsed, 1),
+        "depth": settings["depth"],
+        "st": settings["st"],
+        "regex": settings.get("regex") or [],
+        "config_hash": config_hash,
+        "log_sha256": sha256_file(log_file),
+        "parsed_csv": str(structured.relative_to(ROOT)),
+        "wall_time_s": round(elapsed, 3),
+        "git_sha": git_sha(),
+        "python": python_version(),
+        "uv_lock_sha256": uv_lock_hash(),
+        "metrics_impl": "harness.metrics (Apache-2.0, Jiang et al. ISSTA'24 formulas)",
     }
-    meta_path = out_dir / f"drain_{args.dataset.lower()}.json"
-    meta_path.write_text(json.dumps(meta, indent=2))
-    print(f"done in {elapsed:.1f}s -> {out_dir}/ (meta: {meta_path.name})")
+    write_json(out_dir / f"drain_{args.dataset.lower()}.json", meta)
+    print(f"done in {elapsed:.1f}s -> {structured}")
 
 
 if __name__ == "__main__":

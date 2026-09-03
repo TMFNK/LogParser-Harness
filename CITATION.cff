@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: Cite this software for the harness; cite the LogHub papers for the data and metrics.
+title: LogParser-Harness
+version: 0.1.0
+date-released: "2026-09-03"
+license: Apache-2.0
+repository-code: https://github.com/TMFNK/LogParser-Harness
+authors:
+  - name: MbitAI
+    website: https://www.mbitai.com
+abstract: >
+  Reproducible Drain baseline on LogHub-2k with an Apache-2.0 implementation
+  of the LogHub-2.0 metrics GA, PA, FGA, and FTA.
+references:
+  - type: article
+    title: "A Large-scale Evaluation for Log Parsing Techniques: How Far are We?"
+    authors:
+      - family-names: Jiang
+        given-names: Zhihan
+    year: 2024
+    url: https://arxiv.org/abs/2308.10828
+  - type: article
+    title: "Loghub: A Large Collection of System Log Datasets for AI-driven Log Analytics"
+    authors:
+      - family-names: Zhu
+        given-names: Jieming
+    year: 2023
+    url: https://arxiv.org/abs/2008.06448
