@@ -1,5 +1,7 @@
 # LogParser-Harness
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22341500.svg)](https://doi.org/10.5281/zenodo.22341500)
+
 Reproducible **Drain** baseline on LogHub-2k, scored with the four LogHub-2.0
 metrics: **GA**, **PA**, **FGA**, **FTA**.
 

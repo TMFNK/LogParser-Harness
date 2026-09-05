@@ -1,10 +1,17 @@
 cff-version: 1.2.0
 message: Cite this software for the harness; cite the LogHub papers for the data and metrics.
 title: LogParser-Harness
-version: 0.2.0
+version: 0.2.1
 date-released: "2026-09-05"
 license: Apache-2.0
 repository-code: https://github.com/TMFNK/LogParser-Harness
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.22341500
+    description: This version
+  - type: doi
+    value: 10.5281/zenodo.22341499
+    description: All versions
 authors:
   - name: MbitAI
     website: https://www.mbitai.com
