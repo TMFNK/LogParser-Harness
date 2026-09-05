@@ -6,7 +6,7 @@
   "FGA": 0.232558,
   "FTA": 0.139535,
   "n_messages": 2000,
-  "settings": "LogParser-Trail@5bdd7bba configs/miner.yaml (st=0.5, anchor_tokens=2, length_slack=1, regex masks); LogHub Content via configs/drain.yaml Apache log_format",
+  "settings": "LogParser-Trail@3021b81 configs/miner.yaml (key-aware masks, identity PROTO, positional username); LogHub Content via configs/drain.yaml Apache log_format",
   "data": "logpai/Loghub-2.0@ac4aad2ea86f561e5a0acbc6587fa28b487259f9 2k_dataset/Apache",
   "notes": "Honest first Apache_2k Trail run. Drain Apache golden is unchanged. PA matches Drain token PA on this file; grouping FGA/FTA do not."
 }

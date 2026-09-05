@@ -97,7 +97,7 @@ def main() -> None:
     anchor_tokens = int(cfg["anchor_tokens"])
     length_slack = int(cfg.get("length_slack", 0))
     regex = list(cfg.get("regex") or [])
-
+    identity_keys = list(cfg.get("identity_keys") or [])
     drain_cfg = yaml.safe_load((ROOT / "configs" / "drain.yaml").read_text())
     fmt_re = None
     if args.dataset == "SecOps":
@@ -125,6 +125,7 @@ def main() -> None:
         anchor_tokens=anchor_tokens,
         length_slack=length_slack,
         regex=regex,
+        identity_keys=identity_keys,
     )
     fed = []
     t0 = time.time()

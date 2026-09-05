@@ -1,0 +1,12 @@
+{
+  "parser": "spell",
+  "dataset": "OpenSSH_2k",
+  "GA": 0.2515,
+  "PA": 0.121,
+  "FGA": 0.487805,
+  "FTA": 0.195122,
+  "n_messages": 2000,
+  "settings": "configs/spell.yaml OpenSSH (logparser3 Spell, tau=0.5, same log_format/regex as Drain)",
+  "data": "logpai/Loghub-2.0@ac4aad2ea86f561e5a0acbc6587fa28b487259f9 2k_dataset/OpenSSH",
+  "notes": "Untuned tau=0.5. Weakest of the three parsers on OpenSSH grouping."
+}

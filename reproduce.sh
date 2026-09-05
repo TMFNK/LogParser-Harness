@@ -1,28 +1,32 @@
 #!/usr/bin/env bash
-# Drain-only is the stranger path. --with-trail also runs the sibling plugin.
+# Drain-only is the stranger path. --with-spell adds the Spell baseline.
+# --with-trail also runs the sibling plugin.
 # Usage: ./reproduce.sh --drain-only
 #        ./reproduce.sh --drain-only Apache Linux
+#        ./reproduce.sh --with-spell
 #        ./reproduce.sh --with-trail
 set -euo pipefail
 cd "$(dirname "$0")"
 
 if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
   echo "usage: $0 --drain-only [Apache] [Linux] [OpenSSH]"
+  echo "       $0 --with-spell"
   echo "       $0 --with-trail"
   echo "Drain-only is the default stranger path. --with-trail needs ../LogParser-Trail."
   exit 0
 fi
 
 mode="${1:-}"
-if [[ "$mode" != "--drain-only" && "$mode" != "--with-trail" ]]; then
+if [[ "$mode" != "--drain-only" && "$mode" != "--with-spell" && "$mode" != "--with-trail" ]]; then
   echo "Run: ./reproduce.sh --drain-only" >&2
+  echo "Spell baseline: ./reproduce.sh --with-spell" >&2
   echo "Trail sibling: ./reproduce.sh --with-trail" >&2
   exit 2
 fi
 shift
 
-if [[ "$mode" == "--with-trail" ]]; then
-  datasets=(Apache)
+if [[ "$mode" == "--with-trail" || "$mode" == "--with-spell" ]]; then
+  datasets=(Apache Linux OpenSSH)
 else
   datasets=("$@")
   if [[ ${#datasets[@]} -eq 0 ]]; then
@@ -50,13 +54,28 @@ for ds in "${datasets[@]}"; do
     --actual "results/raw/drain_${slug}_scores.json"
 done
 
+if [[ "$mode" == "--with-spell" || "$mode" == "--with-trail" ]]; then
+  echo "=== spell + score ==="
+  for ds in "${datasets[@]}"; do
+    uv run python scripts/run_spell.py --dataset "$ds"
+    uv run python scripts/score.py --dataset "$ds" --parser spell
+    slug="$(printf '%s' "$ds" | tr '[:upper:]' '[:lower:]')"
+    uv run python scripts/verify_golden.py \
+      --expected "expected/spell_${slug}_2k.json" \
+      --actual "results/raw/spell_${slug}_scores.json"
+  done
+fi
+
 if [[ "$mode" == "--with-trail" ]]; then
   echo "=== trail + score ==="
-  uv run python scripts/run_trail.py --dataset Apache
-  uv run python scripts/score.py --dataset Apache --parser trail
-  uv run python scripts/verify_golden.py \
-    --expected expected/trail_apache_2k.json \
-    --actual results/raw/trail_apache_scores.json
+  for ds in "${datasets[@]}"; do
+    uv run python scripts/run_trail.py --dataset "$ds"
+    uv run python scripts/score.py --dataset "$ds" --parser trail
+    slug="$(printf '%s' "$ds" | tr '[:upper:]' '[:lower:]')"
+    uv run python scripts/verify_golden.py \
+      --expected "expected/trail_${slug}_2k.json" \
+      --actual "results/raw/trail_${slug}_scores.json"
+  done
   dataset_src="${DATASET_SRC:-../LogParser-Dataset}"
   if [ -f "$dataset_src/dataset/SecOps_2k.log" ]; then
     echo "=== trail SecOps-2k ==="

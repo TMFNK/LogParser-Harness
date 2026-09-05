@@ -1,0 +1,25 @@
+# Spell baseline settings. Same installed dependency as Drain
+# (logparser3, logpai/logparser, Apache-2.0) — no new license risk.
+# log_format and regex are LogHub file-format facts, copied from
+# configs/drain.yaml. tau=0.5 is the logparser default and the value
+# used in the logpai Spell benchmark runs. Do not retune these if the
+# goal is a stable baseline.
+
+datasets:
+  Apache:
+    log_format: '\[<Time>\] \[<Level>\] <Content>'
+    regex:
+      - '(\d+\.){3}\d+'
+    tau: 0.5
+  Linux:
+    log_format: '<Month> <Date> <Time> <Level> <Component>(\[<PID>\])?: <Content>'
+    regex:
+      - '(\d+\.){3}\d+'
+      - '\d{2}:\d{2}:\d{2}'
+    tau: 0.5
+  OpenSSH:
+    log_format: '<Date> <Day> <Time> <Component> sshd\[<Pid>\]: <Content>'
+    regex:
+      - '(\d+\.){3}\d+'
+      - '([\w-]+\.){2,}[\w-]+'
+    tau: 0.5

@@ -23,20 +23,35 @@ jobs:
           uv run python scripts/score.py --dataset Apache --parser drain
       - name: Golden
         run: uv run python scripts/verify_golden.py
+      - name: Fetch Linux/OpenSSH 2k
+        run: uv run python scripts/fetch_assets.py --dataset Linux --dataset OpenSSH
+      - name: Spell + score
+        run: |
+          for ds in Apache Linux OpenSSH; do
+            uv run python scripts/run_spell.py --dataset "$ds"
+            uv run python scripts/score.py --dataset "$ds" --parser spell
+            slug="$(printf '%s' "$ds" | tr '[:upper:]' '[:lower:]')"
+            uv run python scripts/verify_golden.py \
+              --expected "expected/spell_${slug}_2k.json" \
+              --actual "results/raw/spell_${slug}_scores.json"
+          done
       - name: Checkout pinned Trail
         uses: actions/checkout@v4
         with:
           repository: TMFNK/LogParser-Trail
-          ref: 5bdd7bba1af5fae2c5c6b74f5fc73d92ad1e456d
+          ref: a17e1de60e612c88857da34615f2254082a7c013
           path: LogParser-Trail
-      - name: Trail Apache
+      - name: Trail Apache/Linux/OpenSSH
         env:
           TRAIL_SRC: ${{ github.workspace }}/LogParser-Trail
         run: |
-          uv run python scripts/run_trail.py --dataset Apache
-          uv run python scripts/score.py --dataset Apache --parser trail
-          uv run python scripts/verify_golden.py \
-            --expected expected/trail_apache_2k.json \
-            --actual results/raw/trail_apache_scores.json
+          for ds in Apache Linux OpenSSH; do
+            uv run python scripts/run_trail.py --dataset "$ds"
+            uv run python scripts/score.py --dataset "$ds" --parser trail
+            slug="$(printf '%s' "$ds" | tr '[:upper:]' '[:lower:]')"
+            uv run python scripts/verify_golden.py \
+              --expected "expected/trail_${slug}_2k.json" \
+              --actual "results/raw/trail_${slug}_scores.json"
+          done
       - name: Table
         run: uv run python scripts/make_table.py

@@ -1,0 +1,12 @@
+{
+  "parser": "spell",
+  "dataset": "Linux_2k",
+  "GA": 0.5975,
+  "PA": 0.0875,
+  "FGA": 0.735849,
+  "FTA": 0.150943,
+  "n_messages": 2000,
+  "settings": "configs/spell.yaml Linux (logparser3 Spell, tau=0.5, same log_format/regex as Drain)",
+  "data": "logpai/Loghub-2.0@ac4aad2ea86f561e5a0acbc6587fa28b487259f9 2k_dataset/Linux",
+  "notes": "Untuned tau=0.5. Trail matches Drain GA here (0.69); Spell trails both."
+}

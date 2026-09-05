@@ -1,0 +1,12 @@
+{
+  "parser": "spell",
+  "dataset": "Apache_2k",
+  "GA": 0.576,
+  "PA": 0.2695,
+  "FGA": 0.727273,
+  "FTA": 0.181818,
+  "n_messages": 2000,
+  "settings": "configs/spell.yaml Apache (logparser3 Spell, tau=0.5, same log_format/regex as Drain)",
+  "data": "logpai/Loghub-2.0@ac4aad2ea86f561e5a0acbc6587fa28b487259f9 2k_dataset/Apache",
+  "notes": "Untuned tau=0.5 merges jk2_init Found-child (836) with Can't-find-child (12): long lines, one outcome word differs. Trail's 2-anchor guard keeps them apart (Trail GA 0.984)."
+}

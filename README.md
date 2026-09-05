@@ -36,13 +36,20 @@ Linux and OpenSSH 2k:
 ./reproduce.sh --drain-only Apache Linux OpenSSH
 ```
 
+Spell baseline (same `logparser3` dependency, tau=0.5, untuned):
+
+```bash
+./reproduce.sh --with-spell
+```
+
 [Trail](https://github.com/TMFNK/LogParser-Trail) is optional and not
 vendored. Point `TRAIL_SRC` at a local checkout, or use the sibling default
-`../LogParser-Trail`. `--with-trail` runs Drain on Apache_2k, then Trail on the
-same file. It also runs Trail on
+`../LogParser-Trail`. `--with-trail` runs Drain and Trail on Apache_2k,
+Linux_2k, and OpenSSH_2k. It also runs Trail on
 [SecOps-2k](https://github.com/TMFNK/LogParser-Dataset) when that repository is
 checked out at `../LogParser-Dataset`; set `DATASET_SRC` for another checkout
-location. Apache Drain scores still have to match `expected/drain_apache_2k.json`.
+location. Drain scores still have to match `expected/drain_*_2k.json`, and
+Trail scores have to match `expected/trail_*_2k.json`.
 
 ```bash
 ./reproduce.sh --with-trail
@@ -55,9 +62,13 @@ location. Apache Drain scores still have to match `expected/drain_apache_2k.json
 | Loghub-2.0 git commit (2k files only) | `configs/datasets.yaml` |
 | File sha256 | same file, checked on fetch |
 | Drain `log_format`, `depth`, `st`, `regex` | `configs/drain.yaml` (from logpai/logparser Drain benchmark) |
+| Spell `log_format`, `tau`, `regex` | `configs/spell.yaml` (same dependency, tau=0.5, untuned) |
 | Metric formulas | `harness/metrics.py` (Jiang et al., ISSTA'24 §4.2) |
 | Expected Apache scores | `expected/drain_apache_2k.json` |
+| Expected Linux/OpenSSH Drain scores | `expected/drain_{linux,openssh}_2k.json` |
+| Expected Spell scores | `expected/spell_{apache,linux,openssh}_2k.json` |
 | Expected Apache Trail scores | `expected/trail_apache_2k.json` (sibling plugin) |
+| Expected Linux/OpenSSH Trail scores | `expected/trail_{linux,openssh}_2k.json` (sibling plugin) |
 | Expected SecOps-2k Trail scores | `expected/trail_secops_2k.json` (sibling dataset) |
 | Trail revision exercised by CI | `.github/workflows/drain-apache.yml` |
 | Python deps | `uv.lock` |
@@ -92,7 +103,13 @@ uv run pytest -q
 ## Results
 
 See `results/results.md`. Apache_2k Drain is the CI golden. Linux_2k grouping
-accuracy matches the logpai Drain toolkit (GA 0.69).
+accuracy matches the logpai Drain toolkit (GA 0.69). Trail rows cover the
+same three files: it matches Drain GA on Linux, trails on OpenSSH
+(late-line merges the 2-anchor guard misses — see the golden notes),
+and over-fragments Apache (37 parsed vs 6 truth templates).
+Spell (untuned tau=0.5) trails both parsers on all three files; on
+Apache it merges the jk2_init Found/Can't-find pair Trail's anchors
+keep apart.
 
 ## License
 
@@ -110,6 +127,7 @@ numbers from this harness:
 - Jieming Zhu et al., "LogHub: A Large Collection of System Log Datasets for
   AI-driven Log Analytics." ISSRE, 2023. https://arxiv.org/abs/2008.06448
 - Drain: Pinjia He et al., ICWS 2017. logpai/logparser (Apache-2.0)
+- Spell: Min Du and Feifei Li, ICDM 2016. Same logpai/logparser package.
 
 ## Limitations
 

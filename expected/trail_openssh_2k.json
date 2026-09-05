@@ -1,0 +1,12 @@
+{
+  "parser": "trail",
+  "dataset": "OpenSSH_2k",
+  "GA": 0.542,
+  "PA": 0.508,
+  "FGA": 0.784314,
+  "FTA": 0.431373,
+  "n_messages": 2000,
+  "settings": "LogParser-Trail@810b9c2 configs/miner.yaml (key-aware masks, identity PROTO, positional username); LogHub Content via configs/drain.yaml OpenSSH log_format",
+  "data": "logpai/Loghub-2.0@ac4aad2ea86f561e5a0acbc6587fa28b487259f9 2k_dataset/OpenSSH",
+  "notes": "GA lags Drain (0.542 vs 0.789): Trail merges pam_unix failure with/without trailing user= and Received-disconnect Bye-Bye/disconnected-by-user. Late-line differences the 2-anchor guard does not catch. PA equals Drain (0.508); 25 parsed vs 26 truth templates."
+}

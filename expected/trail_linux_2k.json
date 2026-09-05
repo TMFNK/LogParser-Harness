@@ -1,0 +1,12 @@
+{
+  "parser": "trail",
+  "dataset": "Linux_2k",
+  "GA": 0.69,
+  "PA": 0.1705,
+  "FGA": 0.918455,
+  "FTA": 0.39485,
+  "n_messages": 2000,
+  "settings": "LogParser-Trail@810b9c2 configs/miner.yaml (key-aware masks, identity PROTO, positional username); LogHub Content via configs/drain.yaml Linux log_format",
+  "data": "logpai/Loghub-2.0@ac4aad2ea86f561e5a0acbc6587fa28b487259f9 2k_dataset/Linux",
+  "notes": "Trail matches Drain GA (0.69) on Linux_2k; FGA close (0.9185 vs 0.9304). 115 parsed vs 118 truth templates."
+}
