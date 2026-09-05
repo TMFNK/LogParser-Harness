@@ -119,6 +119,35 @@ Apache-2.0, copyright 2026 MbitAI. See LICENSE and NOTICE.
 
 Need this applied to your own log pipelines? https://www.mbitai.com
 
+## Cite this (Zenodo)
+
+If you use this harness, please cite the archived release:
+
+> MbitAI. (2026). *LogParser-Harness* (v0.2.1). Zenodo.
+> https://doi.org/10.5281/zenodo.22341500
+
+| | |
+| --- | --- |
+| This version | [10.5281/zenodo.22341500](https://doi.org/10.5281/zenodo.22341500) |
+| All versions (concept DOI) | [10.5281/zenodo.22341499](https://doi.org/10.5281/zenodo.22341499) |
+| GitHub tag | [`v0.2.1`](https://github.com/TMFNK/LogParser-Harness/releases/tag/v0.2.1) |
+| Record | https://zenodo.org/records/22341500 |
+
+Also see [`CITATION.cff`](CITATION.cff).
+
+```bibtex
+@software{mbitai_2026_logparser_harness,
+  author       = {MbitAI},
+  title        = {LogParser-Harness},
+  month        = sep,
+  year         = 2026,
+  publisher    = {Zenodo},
+  version      = {v0.2.1},
+  doi          = {10.5281/zenodo.22341500},
+  url          = {https://doi.org/10.5281/zenodo.22341500},
+}
+```
+
 ## Must-cite (LogHub terms)
 
 The LogHub-2k files are for research use. Cite both papers if you publish
